@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import './App.css';
-import { PieChart } from './PieChart';
+// import { PieChart } from './PieChart';
 import { BarChart } from './BarChart';
 
 type Candidate = {
@@ -11,26 +11,7 @@ type Candidate = {
   ngaySinh: string;
 };
 
-function parseData(raw: string): Candidate[] {
-  // Tách từng dòng, bỏ dòng trống và dòng tiêu đề nếu có
-  const lines = raw.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-  // Nếu dòng đầu là tiêu đề thì bỏ qua
-  const dataLines = lines[0].match(/^[0-9]+ /) ? lines : lines.slice(1);
-  return dataLines.map(line => {
-    // Tách theo khoảng trắng, nhưng họ tên có thể có nhiều từ
-    // Định dạng: SBD Họ và tên Điểm Ngày/tháng/năm
-    // Cách: lấy số đầu, số cuối, phần giữa là họ tên
-    const match = line.match(/^(\d+)\s+(.+)\s+(\d+(?:[.,]\d+)?)\s+(\d{2}\/\d{2}\/\d{4})$/);
-    if (!match) return { soBaoDanh: '', hoVaTen: '', diem: 0, ngaySinh: '' };
-    const [, soBaoDanh, hoVaTen, diem, ngaySinh] = match;
-    return {
-      soBaoDanh: soBaoDanh.trim(),
-      hoVaTen: hoVaTen.trim(),
-      diem: Number(diem.replace(',', '.')),
-      ngaySinh: ngaySinh.trim(),
-    };
-  }).filter(c => c.soBaoDanh);
-}
+// Đã bỏ hàm parseData vì không còn sử dụng
 
 function App() {
   const [data, setData] = useState<Candidate[]>([]);
