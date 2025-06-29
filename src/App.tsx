@@ -112,12 +112,13 @@ function App() {
     <div>
       <header className="main-header">
         <div className="header-bg"></div>
-        <div className="header-content" style={{ display: 'flex', alignItems: 'center', gap: 32, padding: '12px 0 12px 12px' }}>
-          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{ height: 100, width: 100, objectFit: 'contain', borderRadius: 16, background: '#fff', boxShadow: '0 2px 8px #0001', marginRight: 20, marginLeft: 0 }} />
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'center', minHeight: 100 }}>
-            <div className="header-title" style={{ textAlign: 'left', marginLeft: 8, fontSize: 32, fontWeight: 700, lineHeight: 1.1 }}>TRA CỨU ĐIỂM THI LỚP 6</div>
-            <div className="header-sub" style={{ textAlign: 'left', marginLeft: 8, fontSize: 18, fontWeight: 400, marginTop: 8 }}>Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026</div>
+        <div className="header-content" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, padding: '0 32px'}}>
+          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginLeft: 12}} />
+          <div style={{flex: 1, minWidth: 0}}>
+            <div className="header-title">TRA CỨU ĐIỂM THI LỚP 6</div>
+            <div className="header-sub">Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026</div>
           </div>
+          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginRight: 12}} />
         </div>
       </header>
       <div className="stats-box">
