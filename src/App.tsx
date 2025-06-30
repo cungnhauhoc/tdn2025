@@ -113,18 +113,24 @@ function App() {
 
       <header className="main-header">
         <div className="header-bg"></div>
-        <nav className="main-menu" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, padding: '10px 0 0 0', zIndex: 2, position: 'relative' }}>
-          <a href="https://cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link">Trang chủ</a>
-          <a href="https://tdn2024.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link">Tra cứu điểm năm 2024</a>
-          <a href="https://tdn2025.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link menu-link-active">Tra cứu điểm năm 2025</a>
-        </nav>
-        <div className="header-content">
-          <img className="header-logo left" src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" />
-          <div className="header-text">
+        <div className="header-content" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, padding: '0 32px'}}>
+          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginLeft: 12}} />
+          <div style={{flex: 1, minWidth: 0}}>
+            <div style={{display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 4}}>
+              <a href="https://cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4}}>
+                <span role="img" aria-label="home">🏠</span> Trang chủ
+              </a>
+              <a href="https://tdn2024.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4}}>
+                <span role="img" aria-label="2024">📅</span> Tra cứu điểm năm 2024
+              </a>
+              <a href="https://tdn2025.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4}}>
+                <span role="img" aria-label="2025">🆕</span> Tra cứu điểm năm 2025
+              </a>
+            </div>
             <div className="header-title">TRA CỨU ĐIỂM THI LỚP 6</div>
             <div className="header-sub">Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026</div>
           </div>
-          <img className="header-logo right" src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" />
+          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginRight: 12}} />
         </div>
       </header>
       <div className="stats-container" style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>

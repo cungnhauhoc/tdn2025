@@ -1,3 +1,149 @@
+/* Header style like tdn2024.cungnhauhoc.net */
+.tdn2025-header {
+  background: linear-gradient(90deg, #1976d2 0%, #43a047 100%);
+  border-radius: 0 0 18px 18px;
+  box-shadow: 0 2px 16px #1976d233;
+  margin-bottom: 24px;
+  overflow: hidden;
+  max-width: 1000px;
+  margin: 0 auto 24px auto;
+  position: relative;
+}
+.tdn2025-header .header-bg {
+  position: absolute;
+  inset: 0;
+  background: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1000&q=80') center/cover no-repeat;
+  opacity: 0.13;
+  z-index: 0;
+}
+.header-bar {
+  width: 100%;
+  background: rgba(255,255,255,0.95);
+  box-shadow: 0 2px 8px #1976d211;
+  position: relative;
+  z-index: 2;
+}
+.header-bar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 18px;
+  min-height: 64px;
+  gap: 18px;
+}
+.header-bar-logo {
+  height: 54px;
+  width: 54px;
+  object-fit: contain;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 6px #1976d222;
+}
+.header-bar-title {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  margin-left: 10px;
+}
+.header-bar-title-main {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1976d2;
+  letter-spacing: 1px;
+  text-shadow: 0 1px 8px #fff8;
+  text-transform: uppercase;
+}
+.header-bar-title-sub {
+  font-size: 1.02rem;
+  color: #333;
+  font-weight: 500;
+  opacity: 0.95;
+}
+.tdn2025-header .main-menu {
+  gap: 10px;
+  padding: 0;
+}
+.tdn2025-header .menu-link {
+  font-size: 1.01rem;
+  padding: 5px 12px;
+}
+.tdn2025-header .menu-link-active {
+  background: #1976d2;
+  color: #fff !important;
+}
+.header-banner {
+  width: 100%;
+  background: linear-gradient(90deg, #1976d2 0%, #43a047 100%);
+  padding: 32px 0 18px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+.header-banner-inner {
+  text-align: center;
+  color: #fff;
+}
+.header-banner-title {
+  font-size: 2.3rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+  text-shadow: 0 2px 12px #0004, 0 1px 0 #fff8;
+  text-transform: uppercase;
+}
+.header-banner-sub {
+  font-size: 1.18rem;
+  opacity: 0.98;
+  font-weight: 500;
+  text-shadow: 0 1px 8px #0003;
+}
+@media (max-width: 900px) {
+  .header-bar-inner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    min-height: 80px;
+    padding: 0 6vw;
+  }
+  .header-bar-title {
+    align-items: flex-start;
+    margin-left: 0;
+  }
+  .header-bar-logo {
+    margin-bottom: 4px;
+  }
+}
+@media (max-width: 600px) {
+  .tdn2025-header {
+    border-radius: 0 0 10px 10px;
+    margin-bottom: 12px;
+  }
+  .header-bar-inner {
+    padding: 0 2vw;
+    min-height: 70px;
+  }
+  .header-bar-logo {
+    height: 40px;
+    width: 40px;
+  }
+  .header-banner {
+    padding: 18px 0 10px 0;
+  }
+  .header-banner-title {
+    font-size: 1.18rem;
+  }
+  .header-banner-sub {
+    font-size: 0.98rem;
+  }
+}
 /* Main menu styles */
 .main-menu {
   width: 100%;
