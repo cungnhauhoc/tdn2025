@@ -86,12 +86,12 @@ function App() {
   };
 
   // --- Thống kê ---
-  const total = data.length;
-  const avg = total > 0 ? (data.reduce((sum, c) => sum + c.diem, 0) / total).toFixed(2) : 0;
-  const max = total > 0 ? Math.max(...data.map(c => c.diem)) : 0;
+  const total: number = data.length;
+  const avg: string = total > 0 ? (data.reduce((sum, c) => sum + c.diem, 0) / total).toFixed(2) : '0.00';
+  const max: number = total > 0 ? Math.max(...data.map(c => c.diem)) : 0;
   const PASS_SCORE = 73.25;
-  const passed = data.filter(c => c.diem >= PASS_SCORE).length;
-  const passRate = total > 0 ? ((passed / total) * 100).toFixed(2) : 0;
+  const passed: number = data.filter(c => c.diem >= PASS_SCORE).length;
+  const passRate: string = total > 0 ? ((passed / total) * 100).toFixed(2) : '0.00';
 
 
   // Phổ điểm: chia các mốc 5 điểm, chỉ lấy đến 100, nhãn đẹp, không có 100–104.99
@@ -110,23 +110,55 @@ function App() {
 
   return (
     <div>
+
       <header className="main-header">
         <div className="header-bg"></div>
-        <div className="header-content" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, padding: '0 32px'}}>
-          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginLeft: 12}} />
-          <div style={{flex: 1, minWidth: 0}}>
+        <nav className="main-menu" style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 24, padding: '10px 0 0 0', zIndex: 2, position: 'relative' }}>
+          <a href="https://cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link">Trang chủ</a>
+          <a href="https://tdn2024.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link">Tra cứu điểm năm 2024</a>
+          <a href="https://tdn2025.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link menu-link-active">Tra cứu điểm năm 2025</a>
+        </nav>
+        <div className="header-content">
+          <img className="header-logo left" src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" />
+          <div className="header-text">
             <div className="header-title">TRA CỨU ĐIỂM THI LỚP 6</div>
             <div className="header-sub">Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026</div>
           </div>
-          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginRight: 12}} />
+          <img className="header-logo right" src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" />
         </div>
       </header>
-      <div className="stats-box">
-        <div className="stat-item"><b>Tổng số thí sinh:</b> {total}</div>
-        <div className="stat-item"><b>Điểm trung bình:</b> {avg}</div>
-        <div className="stat-item"><b>Điểm cao nhất:</b> {max}</div>
-        <div className="stat-item"><b>Số thí sinh đậu:</b> {passed}</div>
-        <div className="stat-item"><b>Tỉ lệ đậu:</b> {passRate}%</div>
+      <div className="stats-container" style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
+        <div className="stats-box" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: 24, background: '#f8fafc', borderRadius: 16, boxShadow: '0 2px 12px #0001', padding: '24px 40px', minWidth: 600 }}>
+          <div className="stats-group" style={{ display: 'flex', flexDirection: 'row', gap: 48, justifyContent: 'center', alignItems: 'center' }}>
+            <div className="stat-item">
+              <span className="stat-icon" role="img" aria-label="Tổng số thí sinh">👥</span>
+              <div className="stat-label" style={{ color: '#222', fontWeight: 600 }}>Tổng số thí sinh</div>
+              <div className="stat-value" style={{ color: '#1565c0', fontWeight: 700 }}>{total}</div>
+            </div>
+            <div className="stat-item">
+              <span className="stat-icon" role="img" aria-label="Điểm trung bình">📊</span>
+              <div className="stat-label" style={{ color: '#222', fontWeight: 600 }}>Điểm trung bình</div>
+              <div className="stat-value" style={{ color: '#2e7d32', fontWeight: 700 }}>{avg}</div>
+            </div>
+            <div className="stat-item">
+              <span className="stat-icon" role="img" aria-label="Điểm cao nhất">🏆</span>
+              <div className="stat-label" style={{ color: '#222', fontWeight: 600 }}>Điểm cao nhất</div>
+              <div className="stat-value" style={{ color: '#d84315', fontWeight: 700 }}>{max}</div>
+            </div>
+          </div>
+          <div className="stats-group" style={{ display: 'flex', flexDirection: 'row', gap: 48, justifyContent: 'center', alignItems: 'center' }}>
+            <div className="stat-item">
+              <span className="stat-icon" role="img" aria-label="Số thí sinh đậu">✅</span>
+              <div className="stat-label" style={{ color: '#222', fontWeight: 600 }}>Số thí sinh đậu</div>
+              <div className="stat-value" style={{ color: '#388e3c', fontWeight: 700 }}>{passed}</div>
+            </div>
+            <div className="stat-item">
+              <span className="stat-icon" role="img" aria-label="Tỉ lệ đậu">📈</span>
+              <div className="stat-label" style={{ color: '#222', fontWeight: 600 }}>Tỉ lệ đậu</div>
+              <div className="stat-value" style={{ color: '#6d4c41', fontWeight: 700 }}>{passRate}%</div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="score-chart">
@@ -139,7 +171,10 @@ function App() {
 
 
       <div className="lookup-box">
-        <div className="main-title">Nhập số báo danh hoặc họ tên để tra cứu</div>
+        <div className="main-title" style={{display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center'}}>
+          <span role="img" aria-label="Tra cứu">🔎</span>
+          Nhập số báo danh hoặc họ tên để tra cứu
+        </div>
         <form className="lookup-form" onSubmit={handleSearch} autoComplete="off">
           <input
             id="sbd"
@@ -150,34 +185,46 @@ function App() {
             required
             autoFocus
           />
-          <button type="submit">Tra cứu</button>
+          <button type="submit"><span role="img" aria-label="Tra cứu">🔍</span> Tra cứu</button>
         </form>
         {result && (
           <div className={`result-card ${result.diem >= PASS_SCORE ? 'passed' : 'failed'}`}> 
             <div className="result-header">
-              <span className="result-icon">{result.diem >= PASS_SCORE ? '🎉' : '❌'}</span>
+              <span className="result-icon" style={{fontSize: 32}}>{result.diem >= PASS_SCORE ? '🎉' : '💡'}</span>
               <span className="result-status">
-                {result.diem >= PASS_SCORE ? 'Chúc mừng, bạn đã ĐẬU!' : 'Rất tiếc, bạn KHÔNG ĐẬU'}
+                {result.diem >= PASS_SCORE
+                  ? <>
+                      <b>Chúc mừng, bạn đã ĐẬU!</b> <span role="img" aria-label="Vương miện">👑</span><br/>
+                      <span style={{fontSize: '1.05em', color: '#2e7d32', fontWeight: 500}}>Hãy tiếp tục phát huy, chúc bạn luôn thành công và hạnh phúc trên con đường phía trước!</span>
+                    </>
+                  : <>
+                      <b>Rất tiếc, bạn chưa ĐẬU!</b> <span role="img" aria-label="Cố lên">💪</span><br/>
+                      <span style={{fontSize: '1.05em', color: '#d84315', fontWeight: 500}}>Đừng buồn nhé, hãy cố gắng hơn ở những kỳ thi tiếp theo. Thành công sẽ đến với người không bỏ cuộc!</span>
+                    </>
+                }
               </span>
             </div>
             <div className="result-info">
-              <div><b>Số báo danh:</b> {result.soBaoDanh}</div>
-              <div><b>Họ và tên:</b> {result.hoVaTen}</div>
-              <div><b>Điểm:</b> <span className={result.diem >= PASS_SCORE ? 'score-pass' : 'score-fail'}>{result.diem}</span></div>
-              <div><b>Ngày sinh:</b> {result.ngaySinh}</div>
+              <div><b><span role="img" aria-label="Số báo danh">🔢</span> Số báo danh:</b> {result.soBaoDanh}</div>
+              <div><b><span role="img" aria-label="Tên">🧑‍🎓</span> Họ và tên:</b> {result.hoVaTen}</div>
+              <div><b><span role="img" aria-label="Điểm">📝</span> Điểm:</b> <span className={result.diem >= PASS_SCORE ? 'score-pass' : 'score-fail'}>{result.diem}</span></div>
+              <div><b><span role="img" aria-label="Ngày sinh">🎂</span> Ngày sinh:</b> {result.ngaySinh}</div>
             </div>
           </div>
         )}
         {resultList && (
           <div className="result-list">
-            <div className="main-title" style={{marginTop: 8}}>Có {resultList.length} thí sinh trùng tên:</div>
+            <div className="main-title" style={{marginTop: 8, display: 'flex', alignItems: 'center', gap: 8}}>
+              <span role="img" aria-label="Trùng tên">👥</span>
+              Có {resultList.length} thí sinh trùng tên:
+            </div>
             <table className="candidate-table">
               <thead>
                 <tr>
-                  <th>Số báo danh</th>
-                  <th>Họ và tên</th>
-                  <th>Điểm</th>
-                  <th>Ngày sinh</th>
+                  <th><span role="img" aria-label="Số báo danh">🔢</span> Số báo danh</th>
+                  <th><span role="img" aria-label="Tên">🧑‍🎓</span> Họ và tên</th>
+                  <th><span role="img" aria-label="Điểm">📝</span> Điểm</th>
+                  <th><span role="img" aria-label="Ngày sinh">🎂</span> Ngày sinh</th>
                 </tr>
               </thead>
               <tbody>
@@ -194,18 +241,24 @@ function App() {
           </div>
         )}
         {notFound && (
-          <div className="notfound">Không tìm thấy thí sinh phù hợp.</div>
+          <div className="notfound" style={{display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center'}}>
+            <span role="img" aria-label="Không tìm thấy">❓</span>
+            Không tìm thấy thí sinh phù hợp.
+          </div>
         )}
         {!result && !resultList && !notFound && data.length > 0 && (
           <>
-            <div className="main-title" style={{marginTop: 8}}>Danh sách thí sinh</div>
+            <div className="main-title" style={{marginTop: 8, display: 'flex', alignItems: 'center', gap: 8}}>
+              <span role="img" aria-label="Danh sách">📋</span>
+              Danh sách thí sinh
+            </div>
             <table className="candidate-table">
               <thead>
                 <tr>
-                  <th>Số báo danh</th>
-                  <th>Họ và tên</th>
-                  <th>Điểm</th>
-                  <th>Ngày sinh</th>
+                  <th><span role="img" aria-label="Số báo danh">🔢</span> Số báo danh</th>
+                  <th><span role="img" aria-label="Tên">🧑‍🎓</span> Họ và tên</th>
+                  <th><span role="img" aria-label="Điểm">📝</span> Điểm</th>
+                  <th><span role="img" aria-label="Ngày sinh">🎂</span> Ngày sinh</th>
                 </tr>
               </thead>
               <tbody>
