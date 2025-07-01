@@ -111,26 +111,47 @@ function App() {
   return (
     <div>
 
-      <header className="main-header">
+      <header className="main-header responsive-header">
         <div className="header-bg"></div>
-        <div className="header-content" style={{display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24, padding: '0 32px'}}>
-          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginLeft: 12}} />
-          <div style={{flex: 1, minWidth: 0}}>
-            <div style={{display: 'flex', justifyContent: 'center', gap: 16, marginBottom: 4}}>
-              <a href="https://cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4}}>
-                <span role="img" aria-label="home">🏠</span> Trang chủ
-              </a>
-              <a href="https://tdn2024.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4}}>
-                <span role="img" aria-label="2024">📅</span> Tra cứu điểm năm 2024
-              </a>
-              <a href="https://tdn2025.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" style={{textDecoration: 'none', color: '#fff', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4}}>
-                <span role="img" aria-label="2025">🆕</span> Tra cứu điểm năm 2025
-              </a>
+        <div className="header-content">
+          <img className="header-logo left" src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" />
+          <div className="header-center">
+            <nav className="main-menu">
+              <a href="https://cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link"><span role="img" aria-label="home">🏠</span> Trang chủ</a>
+              <a href="https://tdn2024.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link"><span role="img" aria-label="2024">📅</span> Tra cứu điểm năm 2024</a>
+              <a href="https://tdn2025.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="menu-link menu-link-active"><span role="img" aria-label="2025">🆕</span> Tra cứu điểm năm 2025</a>
+            </nav>
+            <div className="header-title" style={{
+              color: '#1565c0',
+              fontWeight: 900,
+              fontSize: '2.2rem',
+              letterSpacing: 1.5,
+              textShadow: '0 2px 12px #fff, 0 1px 0 #1976d2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 10
+            }}>
+              <span role="img" aria-label="book">📚</span>
+              TRA CỨU ĐIỂM THI LỚP 6
+              <span role="img" aria-label="search">🔎</span>
             </div>
-            <div className="header-title">TRA CỨU ĐIỂM THI LỚP 6</div>
-            <div className="header-sub">Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026</div>
+            <div className="header-sub" style={{
+              color: '#2e7d32',
+              fontWeight: 700,
+              fontSize: '1.18rem',
+              textShadow: '0 1px 8px #fff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 8
+            }}>
+              <span role="img" aria-label="school">🏫</span>
+              Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026
+              <span role="img" aria-label="calendar">📅</span>
+            </div>
           </div>
-          <img src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" style={{height: 90, width: 90, objectFit: 'contain', marginRight: 12}} />
+          <img className="header-logo right" src="/logo-tdn.png" alt="Logo Trần Đại Nghĩa" />
         </div>
       </header>
       <div className="stats-container" style={{ display: 'flex', justifyContent: 'center', margin: '32px 0' }}>
