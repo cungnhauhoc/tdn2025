@@ -238,9 +238,46 @@ function App() {
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
   const pageSize = 100;
-  
-  const PASS_SCORE = YEAR_CONFIG[selectedYear].passScore;
 
+  // Simple Hash-based Router
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.startsWith('#/tai-lieu/')) {
+        const materialId = hash.replace('#/tai-lieu/', '');
+        const material = EXAM_MATERIALS.find(m => m.id === materialId);
+        if (material) {
+          setCurrentView('materials');
+          // We need a way to trigger the selection in the ExamLibrary component
+          // or move the selection logic up to App.tsx
+          window.dispatchEvent(new CustomEvent('select-material', { detail: material }));
+        }
+      } else if (hash === '#/tra-cuu' || hash === '') {
+        setCurrentView('search');
+      } else if (hash === '#/tai-lieu') {
+        setCurrentView('materials');
+      }
+    };
+
+    window.addEventListener('hashchange', handleHashChange);
+    handleHashChange(); // Initial check
+
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
+
+  // Sync state changes back to hash
+  useEffect(() => {
+    if (currentView === 'search') {
+      window.history.replaceState(null, '', '#/tra-cuu');
+    } else if (currentView === 'materials') {
+      // Material ID will be handled by the click handler
+      if (!window.location.hash.startsWith('#/tai-lieu/')) {
+        window.history.replaceState(null, '', '#/tai-lieu');
+      }
+    }
+  }, [currentView]);
+
+  const PASS_SCORE = YEAR_CONFIG[selectedYear].passScore;
   // Toggle theme
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
@@ -978,6 +1015,8 @@ function ExamLibrary() {
   const handleSelect = async (m: ExamMaterial) => {
     setSelectedMaterial(m.id);
     setIsLoading(true);
+    // Update URL hash for SEO and deep-linking
+    window.history.pushState(null, '', `#/tai-lieu/${m.id}`);
     
     try {
       const modulePath = `./exam-content/${m.path}`;
@@ -1039,6 +1078,25 @@ function ExamLibrary() {
       setIsLoading(false);
     }
   };
+
+  // Support for deep linking via custom event
+  useEffect(() => {
+    const handleSelectEvent = (e: any) => {
+      handleSelect(e.detail);
+    };
+
+    window.addEventListener('select-material', handleSelectEvent);
+    
+    // Initial check if hash is already there on component mount
+    const hash = window.location.hash;
+    if (hash.startsWith('#/tai-lieu/')) {
+      const materialId = hash.replace('#/tai-lieu/', '');
+      const material = EXAM_MATERIALS.find(m => m.id === materialId);
+      if (material) handleSelect(material);
+    }
+
+    return () => window.removeEventListener('select-material', handleSelectEvent);
+  }, []);
 
   const handleLinkClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;

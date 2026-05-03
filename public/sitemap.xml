@@ -1,23 +1,75 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <!-- Trang chủ & Tra cứu -->
   <url>
     <loc>https://diemthi.cungnhauhoc.net/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://diemthi.cungnhauhoc.net/#tra-cuu</loc>
+    <loc>https://diemthi.cungnhauhoc.net/#/tra-cuu</loc>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://diemthi.cungnhauhoc.net/#pho-diem</loc>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
+
+  <!-- Đề thi thử & Kinh nghiệm -->
   <url>
-    <loc>https://diemthi.cungnhauhoc.net/#thong-ke</loc>
-    <changefreq>weekly</changefreq>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/de-thi-thu-1</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/de-thi-thu-2</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/kinh-nghiem-on-thi</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Trần Đại Nghĩa qua các năm -->
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/tdn-2025</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/tdn-2024</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/tdn-2023</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/tdn-2022</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Tuyển sinh khác -->
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/ts-thu-duc-2025</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/ts-nguyen-an-khuong-2024</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://diemthi.cungnhauhoc.net/#/tai-lieu/ts-thu-duc-2024</loc>
+    <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
 </urlset>
