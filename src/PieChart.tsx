@@ -169,7 +169,7 @@ export const PieChart: React.FC<PieChartProps> = ({ bins, binLabels }) => {
         </h4>
         <div style={{ 
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+          gridTemplateColumns: window.innerWidth < 480 ? 'repeat(2, 1fr)' : 'repeat(auto-fill, minmax(140px, 1fr))',
           gap: '8px',
           width: '100%'
         }}>

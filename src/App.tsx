@@ -896,10 +896,18 @@ function App() {
                       <tbody>
                         {resultList.map((c, idx) => (
                           <tr key={`${c.soBaoDanh}-${idx}`} className={c.diem >= PASS_SCORE ? 'passed-row' : 'failed-row'}>
-                            <td style={{ color: getScoreColor(c.diem) }}>{c.soBaoDanh}</td>
-                            <td style={{ color: getScoreColor(c.diem) }}>{c.hoVaTen}</td>
-                            <td style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>{c.diem}</td>
-                            <td style={{ color: getScoreColor(c.diem) }}>{c.ngaySinh}</td>
+                            <td data-label="Số báo danh" style={{ color: getScoreColor(c.diem) }}>
+                              <span className="td-value">{c.soBaoDanh}</span>
+                            </td>
+                            <td data-label="Họ và tên" style={{ color: getScoreColor(c.diem) }}>
+                              <span className="td-value">{c.hoVaTen}</span>
+                            </td>
+                            <td data-label="Điểm" style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>
+                              <span className="td-value">{c.diem}</span>
+                            </td>
+                            <td data-label="Ngày sinh" style={{ color: getScoreColor(c.diem) }}>
+                              <span className="td-value">{c.ngaySinh}</span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -931,10 +939,18 @@ function App() {
                       <tbody>
                         {filteredData.slice((page-1)*pageSize, page*pageSize).map((c, idx) => (
                           <tr key={`${c.soBaoDanh}-${idx}`} className={c.diem >= PASS_SCORE ? 'passed-row' : 'failed-row'}>
-                            <td style={{ color: getScoreColor(c.diem) }}>{c.soBaoDanh}</td>
-                            <td style={{ color: getScoreColor(c.diem) }}>{c.hoVaTen}</td>
-                            <td style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>{c.diem}</td>
-                            <td style={{ color: getScoreColor(c.diem) }}>{c.ngaySinh}</td>
+                            <td data-label="Số báo danh" style={{ color: getScoreColor(c.diem) }}>
+                              <span className="td-value">{c.soBaoDanh}</span>
+                            </td>
+                            <td data-label="Họ và tên" style={{ color: getScoreColor(c.diem) }}>
+                              <span className="td-value">{c.hoVaTen}</span>
+                            </td>
+                            <td data-label="Điểm" style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>
+                              <span className="td-value">{c.diem}</span>
+                            </td>
+                            <td data-label="Ngày sinh" style={{ color: getScoreColor(c.diem) }}>
+                              <span className="td-value">{c.ngaySinh}</span>
+                            </td>
                           </tr>
                         ))}
                       </tbody>
@@ -1000,6 +1016,23 @@ function App() {
           <UpArrowIcon />
         </button>
       )}
+
+      <nav className="bottom-nav">
+        <button 
+          className={`bottom-nav-item ${currentView === 'search' ? 'active' : ''}`}
+          onClick={() => setCurrentView('search')}
+        >
+          <SearchIcon />
+          <span>Tra cứu</span>
+        </button>
+        <button 
+          className={`bottom-nav-item ${currentView === 'materials' ? 'active' : ''}`}
+          onClick={() => setCurrentView('materials')}
+        >
+          <BookIcon />
+          <span>Đề thi & Tài liệu</span>
+        </button>
+      </nav>
     </div>
   );
 }

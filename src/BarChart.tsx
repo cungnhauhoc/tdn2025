@@ -8,8 +8,14 @@ interface BarChartProps {
 export const BarChart: React.FC<BarChartProps> = ({ bins, binLabels }) => {
   const maxValue = Math.max(...bins, 1);
   const width = 800;
-  const chartHeight = 300; // Increased from 200 to 250
-  const margin = { top: 20, right: 30, bottom: 60, left: 60 }; // Increased bottom and left margins
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const chartHeight = isMobile ? 220 : 300;
+  const margin = { 
+    top: 20, 
+    right: 30, 
+    bottom: isMobile ? 40 : 60, 
+    left: isMobile ? 40 : 60 
+  };
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = chartHeight - margin.top - margin.bottom;
   const barWidth = innerWidth / bins.length - 2;
