@@ -2,8 +2,23 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import './styles.css';
 import { BarChart } from './BarChart';
 import { PieChart } from './PieChart';
+import { EXAM_YEARS, YEAR_CONFIG, parse2024Data, type Year } from './data/config';
+import { EXAM_MATERIALS } from './data/materials';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
+
+// Vite glob import for MDX files
+const mdxModules = import.meta.glob('./exam-content/**/*.mdx', { query: '?raw', import: 'default' });
 
 // SVG Icons
+const BrandIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+    <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+  </svg>
+);
+
 const HomeIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -263,20 +278,10 @@ const getScoreColor = (score: number) => {
 // Function to determine if a candidate passed or failed
 const isPassingScore = (score: number, passScore: number) => score >= passScore;
 
-// Statistics for 2024-2025 academic year
-const PREVIOUS_YEAR_STATS = {
-  total: 3932,
-  avg: "48.49",
-  max: 96.5,
-  passed: 356,
-  passRate: "9.05"
-};
-
-// Previous year cutoff score
-const PREVIOUS_YEAR_CUTOFF = 67.5;
-
 function App() {
   const [data, setData] = useState<Candidate[]>([]);
+  const [selectedYear, setSelectedYear] = useState<Year>('2025');
+  const [currentView, setCurrentView] = useState<'search' | 'materials'>('search');
   const [input, setInput] = useState('');
   const [result, setResult] = useState<Candidate | null>(null);
   const [resultList, setResultList] = useState<Candidate[] | null>(null);
@@ -293,7 +298,8 @@ function App() {
   });
   const [showScrollTop, setShowScrollTop] = useState(false);
   const pageSize = 100;
-  const PASS_SCORE = 73.25; // Passing score constant
+  
+  const PASS_SCORE = YEAR_CONFIG[selectedYear].passScore;
 
   // Toggle theme
   const toggleTheme = () => {
@@ -361,7 +367,7 @@ function App() {
     const passRate: string = total > 0 ? ((passed / total) * 100).toFixed(2) : '0.00';
     
     return { total, avg, max, passed, passRate, PASS_SCORE };
-  }, [data]);
+  }, [data, PASS_SCORE]);
 
   // Memoize chart data with 5-point intervals
   const chartData = useMemo(() => {
@@ -371,14 +377,13 @@ function App() {
     const binsFailed = Array(BIN_COUNT).fill(0); // số thí sinh rớt trong mỗi bin
     
     data.forEach(c => {
-      let idx = Math.floor(c.diem / 5); // Changed from 10 to 5 for 5-point intervals
+      let idx = Math.floor(c.diem / 5);
       if (idx >= BIN_COUNT) idx = BIN_COUNT - 1;
       bins[idx]++;
       if (c.diem >= statistics.PASS_SCORE) binsPassed[idx]++;
       else binsFailed[idx]++;
     });
     
-    // Always generate 20 labels regardless of data
     const binLabels = Array.from({ length: BIN_COUNT }, (_, i) => `${i*5}–${(i+1)*5}`);
     
     return { bins, binsPassed, binsFailed, binLabels };
@@ -417,11 +422,14 @@ function App() {
       document.documentElement.setAttribute('data-theme', 'dark');
     }
 
-    fetch('/data.json')
+    const config = YEAR_CONFIG[selectedYear];
+    fetch(config.dataFile)
       .then(res => res.json())
       .then(json => {
-        if (Array.isArray(json)) {
-          // Chuyển đổi dữ liệu từ định dạng mới sang Candidate[]
+        if (selectedYear === '2024') {
+          const parsed = parse2024Data(json.content);
+          setData(parsed);
+        } else if (Array.isArray(json)) {
           const mapped = json.map((item: RawCandidateData) => ({
             soBaoDanh: item["số báo danh"] || '',
             hoVaTen: item["họ và tên"] || '',
@@ -431,7 +439,7 @@ function App() {
           setData(mapped);
         }
       });
-  }, []);
+  }, [selectedYear]);
 
   // Hàm chuẩn hóa chuỗi: loại bỏ dấu, chuyển thường, loại bỏ khoảng trắng thừa
   const normalizeString = useCallback((str: string) => {
@@ -454,7 +462,6 @@ function App() {
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       if (input.trim() === '') {
-        // Clear all results when input is empty
         setResult(null);
         setResultList(null);
         setNotFound(false);
@@ -466,7 +473,6 @@ function App() {
       setResultList(null);
       const inputRaw = input.trim();
       
-      // Nếu nhập toàn số, ưu tiên tìm theo SBD
       if (/^\d+$/.test(inputRaw)) {
         const inputNorm = normalizeSBD(inputRaw);
         const found = data.find(c => normalizeSBD(c.soBaoDanh) === inputNorm);
@@ -476,7 +482,6 @@ function App() {
         }
       }
       
-      // Nếu nhập chữ hoặc không tìm thấy theo SBD, tìm gần đúng theo tên
       const inputNormName = normalizeString(inputRaw);
       const foundList = data.filter(c => normalizeString(c.hoVaTen).includes(inputNormName));
       
@@ -487,7 +492,7 @@ function App() {
       } else if (foundList.length === 0) {
         setNotFound(true);
       }
-    }, 300); // Debounce delay of 300ms
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [input, data, normalizeSBD, normalizeString]);
@@ -520,7 +525,15 @@ function App() {
       "Chúc mừng em đã chinh phục được thử thách này! Hãy biến thành công này thành động lực để vươn tới những đỉnh cao mới!",
       "Rất ấn tượng với kết quả của em! Hy vọng em sẽ tiếp tục giữ vững tinh thần cầu tiến và đạt được nhiều ước mơ!",
       "Thành công không phải là đích đến mà là hành trình. Chúc mừng em đã bắt đầu hành trình đó một cách xuất sắc!",
-      "Em đã chứng minh được rằng sự chăm chỉ luôn được đền đáp. Xin chúc mừng và chúc em tiếp tục tỏa sáng!"
+      "Em đã chứng minh được rằng sự chăm chỉ luôn được đền đáp. Xin chúc mừng và chúc em tiếp tục tỏa sáng!",
+      "Chúc mừng tân học sinh lớp 6 Trần Đại Nghĩa! Một trang mới đầy hứa hẹn đang chờ đón em.",
+      "Thành quả ngọt ngào từ những ngày ôn luyện miệt mài. Chúc mừng em và gia đình!",
+      "Em đã làm được điều kỳ diệu! Hãy tự hào về bản thân và sẵn sàng cho những thử thách mới nhé.",
+      "Một kết quả xứng đáng cho tài năng và sự kiên trì của em. Tiếp tục vươn xa em nhé!",
+      "Chúc mừng em đã ghi tên mình vào danh sách trúng tuyển. Đây là khởi đầu của những thành công rực rỡ sau này.",
+      "Thật tự hào khi thấy em đạt được kết quả này. Chúc mừng em đã thực hiện được mục tiêu của mình!",
+      "Bravo! Một kết quả thật ấn tượng. Chúc em có những năm tháng học trò thật đẹp tại ngôi trường mới.",
+      "Tin vui này chắc chắn sẽ làm cả gia đình tự hào. Chúc mừng em đã vượt qua kỳ khảo sát đầy cam go!"
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   };
@@ -535,498 +548,661 @@ function App() {
       "Mỗi thử thách đều mang đến bài học riêng. Hãy rút kinh nghiệm từ lần này và quay trở lại mạnh mẽ hơn!",
       "Thành công không phải lúc nào cũng đến ngay lập tức. Hãy kiên trì và tiếp tục nỗ lực, em sẽ đạt được điều mình mong muốn!",
       "Đừng để một lần thất bại làm em mất đi niềm tin. Hãy xem đây là cơ hội để em trưởng thành và tiến bộ hơn!",
-      "Cuộc sống không tránh khỏi những thất bại, nhưng điều quan trọng là cách chúng ta vượt qua. Hãy tin vào bản thân và cố gắng thêm!"
+      "Cuộc sống không tránh khỏi những thất bại, nhưng điều quan trọng là cách chúng ta vượt qua. Hãy tin vào bản thân và cố gắng thêm!",
+      "Cố gắng lên em nhé! Chỉ thiếu một chút may mắn thôi, hãy giữ vững ngọn lửa đam mê học tập.",
+      "Kỳ thi này chỉ là một thử thách nhỏ trên con đường dài. Đừng để nó làm nản chí, tương lai vẫn đang rộng mở đón em.",
+      "Học tài thi phận, đôi khi kết quả không phản ánh hết năng lực của mình. Hãy vững tin và tiếp tục rèn luyện em nhé.",
+      "Bố mẹ và thầy cô vẫn luôn tự hào về sự nỗ lực của em. Nghỉ ngơi một chút rồi lại bắt đầu hành trình mới thôi nào!",
+      "Mọi nỗ lực đều được ghi nhận, dù kết quả hôm nay chưa như ý. Hãy mạnh mẽ bước tiếp, thành công sẽ đến với người kiên trì.",
+      "Cánh cửa này khép lại sẽ có cánh cửa khác mở ra. Hãy giữ tinh thần lạc quan và sẵn sàng cho những cơ hội mới.",
+      "Thất bại là mẹ thành công. Đừng buồn lâu em nhé, hãy phân tích lỗi sai và hoàn thiện mình hơn cho lần tới.",
+      "Em đã nỗ lực hết mình và đó mới là điều quan trọng nhất. Hãy tự hào vì mình đã dám đương đầu với thử thách!"
     ];
     return messages[Math.floor(Math.random() * messages.length)];
   };
 
   return (
     <div className="container">
-      {/* Skip to main content link for keyboard navigation */}
       <a href="#main-content" className="skip-link">Bỏ qua tới nội dung chính</a>
       
       <header className="modern-header">
         <div className="modern-header-content">
-          <h1 className="modern-header-title">
-            <BookIcon />
-            TRA CỨU ĐIỂM THI LỚP 6
-            <SearchIcon />
-          </h1>
-          <p className="modern-header-subtitle">
-            <SchoolIcon />
-            Trường THCS - THPT Trần Đại Nghĩa - Năm học 2025 - 2026
-            <CalendarIcon />
-          </p>
-          
-          <nav className="nav-menu" role="navigation" aria-label="Main navigation">
-            <a href="https://cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="nav-link">
-              <HomeIcon />
-              Trang chủ
-            </a>
-            <a href="https://tdn2024.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="nav-link">
-              <CalendarIcon />
-              Tra cứu điểm năm 2024
-            </a>
-            <a href="https://tdn2025.cungnhauhoc.net/" target="_blank" rel="noopener noreferrer" className="nav-link active" aria-current="page">
-              <NewIcon />
-              Tra cứu điểm năm 2025
-            </a>
-            <button 
-              className="nav-link" 
-              onClick={toggleTheme}
-              aria-label={theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
-            >
-              {theme === 'light' ? '🌙 Tối' : '☀️ Sáng'}
-            </button>
+          <div className="brand-header">
+            <div className="brand-logo">
+              <BrandIcon />
+              <div className="brand-text">
+                <span className="brand-name">diemthi.cungnhauhoc.net</span>
+                <span className="brand-tagline">Hệ thống phân tích điểm thi Trần Đại Nghĩa</span>
+              </div>
+            </div>
+
+            <div className="header-actions">
+              <button
+                className="theme-toggle-btn"
+                onClick={toggleTheme}
+                aria-label={theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
+              >
+                {theme === 'light' ? '🌙' : '☀️'}
+              </button>
+            </div>
+          </div>
+
+          <nav className="nav-container" role="navigation">
+            <div className="nav-links">
+              <button
+                className={`nav-tab ${currentView === 'search' ? 'active' : ''}`}
+                onClick={() => setCurrentView('search')}
+              >
+                <SearchIcon />
+                <span>Tra cứu & Phân tích</span>
+              </button>
+              <button
+                className={`nav-tab ${currentView === 'materials' ? 'active' : ''}`}
+                onClick={() => setCurrentView('materials')}
+              >
+                <BookIcon />
+                <span>Đề thi & Tài liệu</span>
+              </button>
+            </div>
+
+            <div className="nav-year-selector">
+              <span className="year-label">Năm thi:</span>
+              <div className="year-chips">
+                {EXAM_YEARS.map(y => (
+                  <button
+                    key={y}
+                    className={`year-chip ${selectedYear === y ? 'active' : ''}`}
+                    onClick={() => {
+                      setSelectedYear(y);
+                      setCurrentView('search');
+                      setInput('');
+                      setResult(null);
+                      setResultList(null);
+                    }}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+            </div>
           </nav>
         </div>
       </header>
-
       <main id="main-content">
-        <section className="stats-section" aria-labelledby="stats-heading">
-          <h2 id="stats-heading" className="sr-only">Thống kê điểm thi</h2>
-          <div className="stats-grid">
-            <div className="stat-card">
-              <UsersIcon />
-              <div className="stat-label">Tổng số thí sinh</div>
-              <div className="stat-value">{statistics.total}</div>
-              <div className="stat-comparison">
-                <span className="stat-comparison-label">Năm trước:</span>
-                <span className="stat-comparison-value">{PREVIOUS_YEAR_STATS.total}</span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <BarChartIcon />
-              <div className="stat-label">Điểm trung bình</div>
-              <div className="stat-value">{statistics.avg}</div>
-              <div className="stat-comparison">
-                <span className="stat-comparison-label">Năm trước:</span>
-                <span className="stat-comparison-value">{PREVIOUS_YEAR_STATS.avg}</span>
-              </div>
-            </div>
-            <div className="stat-card">
-              <AwardIcon />
-              <div className="stat-label">Điểm cao nhất</div>
-              <div className="stat-value">{statistics.max}</div>
-              <div className="stat-comparison">
-                <span className="stat-comparison-label">Năm trước:</span>
-                <span className="stat-comparison-value">{PREVIOUS_YEAR_STATS.max}</span>
-              </div>
-            </div>
-            <div className="stat-card success">
-              <CheckIcon />
-              <div className="stat-label">Số thí sinh đậu</div>
-              <div className="stat-value">{statistics.passed}</div>
-              <div className="stat-comparison">
-                <span className="stat-comparison-label">Năm trước:</span>
-                <span className="stat-comparison-value">{PREVIOUS_YEAR_STATS.passed}</span>
-              </div>
-            </div>
-            <div className="stat-card warning">
-              <TrendingUpIcon />
-              <div className="stat-label">Tỉ lệ đậu</div>
-              <div className="stat-value">{statistics.passRate}%</div>
-              <div className="stat-comparison">
-                <span className="stat-comparison-label">Năm trước:</span>
-                <span className="stat-comparison-value">{PREVIOUS_YEAR_STATS.passRate}%</span>
-              </div>
-            </div>
-            {/* New stat card for passing score */}
-            <div className="stat-card highlight">
-              <TargetIcon />
-              <div className="stat-label">Điểm chuẩn</div>
-              <div className="stat-value">{PASS_SCORE}</div>
-            </div>
-            
-            {/* Previous year cutoff score */}
-            <div className="stat-card highlight">
-              <TargetIcon />
-              <div className="stat-label">Điểm chuẩn năm trước</div>
-              <div className="stat-value">{PREVIOUS_YEAR_CUTOFF}</div>
-            </div>
-          </div>
-        </section>
-
-        <section className="chart-section" aria-labelledby="chart-heading">
-          <div className="chart-header">
-            <h2 id="chart-heading" className="chart-title">Phổ điểm thí sinh (theo thang điểm 10)</h2>
-            <div className="chart-actions" role="group" aria-label="Chuyển đổi loại biểu đồ">
-              <button 
-                className={`chart-toggle-btn ${chartType === 'bar' ? 'active' : ''}`}
-                onClick={() => setChartType('bar')}
-                aria-pressed={chartType === 'bar'}
-              >
-                Biểu đồ cột
-              </button>
-              <button 
-                className={`chart-toggle-btn ${chartType === 'pie' ? 'active' : ''}`}
-                onClick={() => setChartType('pie')}
-                aria-pressed={chartType === 'pie'}
-              >
-                Biểu đồ tròn
-              </button>
-            </div>
-          </div>
-          <div className="chart-container">
-            {chartType === 'bar' ? (
-              <BarChart bins={chartData.bins} binLabels={chartData.binLabels} />
-            ) : (
-              <PieChart bins={chartData.bins} binLabels={chartData.binLabels} />
-            )}
-          </div>
-        </section>
-
-        <section className="search-section" aria-labelledby="search-heading">
-          <div className="search-header">
-            <h2 id="search-heading" className="search-title">
-              <SearchIcon />
-              Nhập số báo danh hoặc họ tên để tra cứu
-            </h2>
-          </div>
-          <form className="search-form" onSubmit={(e) => e.preventDefault()} autoComplete="off">
-            <label htmlFor="sbd" className="sr-only">Số báo danh hoặc họ tên</label>
-            <input
-              id="sbd"
-              type="text"
-              className="search-input"
-              placeholder="Nhập số báo danh hoặc họ tên..."
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              autoFocus
-              aria-describedby="search-help"
-            />
-            <button 
-              type="button" 
-              className="search-button"
-              onClick={() => {
-                setInput('');
-                setResult(null);
-                setResultList(null);
-                setNotFound(false);
-              }}
-            >
-              <ResetIcon />
-              Xóa
-            </button>
-          </form>
-          <div id="search-help" className="sr-only">Nhấn Enter để tra cứu sau khi nhập</div>
-
-          {/* Advanced Filters */}
-          <div className="filters-section">
-            <button 
-              className="filter-toggle-btn"
-              onClick={() => setShowFilters(!showFilters)}
-              aria-expanded={showFilters}
-              aria-controls="filters-content"
-            >
-              {showFilters ? <ChevronUpIcon /> : <ChevronDownIcon />}
-              {showFilters ? 'Ẩn bộ lọc' : 'Hiển thị bộ lọc nâng cao'}
-            </button>
-            
-            {showFilters && (
-              <div id="filters-content" className="filters-content">
-                <div className="filter-row">
-                  <div className="filter-group">
-                    <label htmlFor="min-score">Điểm tối thiểu:</label>
-                    <input
-                      id="min-score"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.25"
-                      value={filters.minScore || ''}
-                      onChange={(e) => handleFilterChange('minScore', e.target.value ? parseFloat(e.target.value) : null)}
-                      className="filter-input"
-                      aria-describedby="min-score-help"
-                    />
-                    <div id="min-score-help" className="sr-only">Nhập điểm tối thiểu để lọc kết quả</div>
-                  </div>
-                  
-                  <div className="filter-group">
-                    <label htmlFor="max-score">Điểm tối đa:</label>
-                    <input
-                      id="max-score"
-                      type="number"
-                      min="0"
-                      max="100"
-                      step="0.25"
-                      value={filters.maxScore || ''}
-                      onChange={(e) => handleFilterChange('maxScore', e.target.value ? parseFloat(e.target.value) : null)}
-                      className="filter-input"
-                      aria-describedby="max-score-help"
-                    />
-                    <div id="max-score-help" className="sr-only">Nhập điểm tối đa để lọc kết quả</div>
-                  </div>
+        {currentView === 'search' ? (
+          <>
+            <section className="stats-section" aria-labelledby="stats-heading">
+              <h2 id="stats-heading" className="sr-only">Thống kê điểm thi</h2>
+              <div className="stats-grid">
+                <div className="stat-card">
+                  <UsersIcon />
+                  <div className="stat-label">Tổng số thí sinh</div>
+                  <div className="stat-value">{statistics.total}</div>
                 </div>
-                
-                <div className="filter-row">
-                  <div className="filter-group">
-                    <label htmlFor="sort-by">Sắp xếp theo:</label>
-                    <select
-                      id="sort-by"
-                      value={filters.sortBy}
-                      onChange={(e) => handleFilterChange('sortBy', e.target.value as 'soBaoDanh' | 'hoVaTen' | 'diem' | 'ngaySinh')}
-                      className="filter-select"
-                      aria-describedby="sort-by-help"
-                    >
-                      <option value="diem">Điểm</option>
-                      <option value="soBaoDanh">Số báo danh</option>
-                      <option value="hoVaTen">Họ và tên</option>
-                      <option value="ngaySinh">Ngày sinh</option>
-                    </select>
-                    <div id="sort-by-help" className="sr-only">Chọn tiêu chí sắp xếp kết quả</div>
-                  </div>
-                  
-                  <div className="filter-group">
-                    <label htmlFor="sort-order">Thứ tự:</label>
-                    <select
-                      id="sort-order"
-                      value={filters.sortOrder}
-                      onChange={(e) => handleFilterChange('sortOrder', e.target.value as 'asc' | 'desc')}
-                      className="filter-select"
-                      aria-describedby="sort-order-help"
-                    >
-                      <option value="desc">Giảm dần</option>
-                      <option value="asc">Tăng dần</option>
-                    </select>
-                    <div id="sort-order-help" className="sr-only">Chọn thứ tự sắp xếp kết quả</div>
-                  </div>
+                <div className="stat-card">
+                  <BarChartIcon />
+                  <div className="stat-label">Điểm trung bình</div>
+                  <div className="stat-value">{statistics.avg}</div>
                 </div>
-                
-                <div className="filter-actions">
+                <div className="stat-card">
+                  <AwardIcon />
+                  <div className="stat-label">Điểm cao nhất</div>
+                  <div className="stat-value">{statistics.max}</div>
+                </div>
+                <div className="stat-card success">
+                  <CheckIcon />
+                  <div className="stat-label">Số thí sinh đậu</div>
+                  <div className="stat-value">{statistics.passed}</div>
+                </div>
+                <div className="stat-card warning">
+                  <TrendingUpIcon />
+                  <div className="stat-label">Tỉ lệ đậu</div>
+                  <div className="stat-value">{statistics.passRate}%</div>
+                </div>
+                <div className="stat-card highlight">
+                  <TargetIcon />
+                  <div className="stat-label">Điểm chuẩn {selectedYear}</div>
+                  <div className="stat-value">{PASS_SCORE}</div>
+                </div>
+              </div>
+            </section>
+
+            <section className="chart-section" aria-labelledby="chart-heading">
+              <div className="chart-header">
+                <h2 id="chart-heading" className="chart-title">Phổ điểm thí sinh (theo thang điểm 10)</h2>
+                <div className="chart-actions" role="group" aria-label="Chuyển đổi loại biểu đồ">
                   <button 
-                    className="reset-filters-btn"
-                    onClick={resetFilters}
-                    aria-describedby="reset-filters-help"
+                    className={`chart-toggle-btn ${chartType === 'bar' ? 'active' : ''}`}
+                    onClick={() => setChartType('bar')}
+                    aria-pressed={chartType === 'bar'}
                   >
-                    <ResetIcon />
-                    Đặt lại bộ lọc
+                    Biểu đồ cột
                   </button>
-                  <div id="reset-filters-help" className="sr-only">Đặt lại tất cả các bộ lọc về mặc định</div>
-                  <span className="filter-results-count">
-                    Hiển thị {filteredData.length} / {data.length} thí sinh
-                  </span>
+                  <button 
+                    className={`chart-toggle-btn ${chartType === 'pie' ? 'active' : ''}`}
+                    onClick={() => setChartType('pie')}
+                    aria-pressed={chartType === 'pie'}
+                  >
+                    Biểu đồ tròn
+                  </button>
                 </div>
               </div>
-            )}
-          </div>
-
-          {result && (
-            <div 
-              className={`result-card ${result.diem >= PASS_SCORE ? 'passed' : 'failed'}`}
-              role="region" 
-              aria-labelledby="result-status"
-            >
-              <div className="result-header">
-                <span className="result-icon">
-                  {result.diem >= PASS_SCORE ? <SuccessIcon /> : <InfoIcon />}
-                </span>
-                <div id="result-status" className="result-status">
-                  {result.diem >= PASS_SCORE
-                    ? <>
-                        <b>Chúc mừng, bạn đã ĐẬU!</b><br/>
-                        <span>{getRandomPassedMessage()}</span>
-                      </>
-                    : <>
-                        <b>Rất tiếc, bạn chưa ĐẬU!</b><br/>
-                        <span>{getRandomFailedMessage()}</span>
-                      </>
-                  }
-                </div>
-              </div>
-              <div className="result-info">
-                <div className="result-info-item">
-                  <span className="result-info-label">Số báo danh</span>
-                  <span className={`result-info-value ${isPassingScore(result.diem, PASS_SCORE) ? 'passed' : 'failed'}`} style={{ color: getScoreColor(result.diem) }}>
-                    {result.soBaoDanh}
-                  </span>
-                </div>
-                <div className="result-info-item">
-                  <span className="result-info-label">Họ và tên</span>
-                  <span className={`result-info-value ${isPassingScore(result.diem, PASS_SCORE) ? 'passed' : 'failed'}`} style={{ color: getScoreColor(result.diem) }}>
-                    {result.hoVaTen}
-                  </span>
-                </div>
-                <div className="result-info-item">
-                  <span className="result-info-label">Điểm</span>
-                  <span className={`result-info-value ${isPassingScore(result.diem, PASS_SCORE) ? 'passed' : 'failed'}`} style={{ color: getScoreColor(result.diem), fontWeight: 'bold' }}>
-                    {result.diem}
-                  </span>
-                </div>
-                <div className="result-info-item">
-                  <span className="result-info-label">
-                    <BirthdayIcon />
-                    Ngày sinh
-                  </span>
-                  <span className={`result-info-value ${isPassingScore(result.diem, PASS_SCORE) ? 'passed' : 'failed'}`} style={{ color: getScoreColor(result.diem) }}>
-                    {result.ngaySinh}
-                  </span>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {resultList && (
-            <div className="results-section" role="region" aria-labelledby="multiple-results-heading">
-              <h3 id="multiple-results-heading" className="search-title">
-                <UsersIcon />
-                Có {resultList.length} thí sinh trùng tên:
-              </h3>
-              <table className="candidates-table">
-                <thead>
-                  <tr>
-                    <th scope="col"><IdCardIcon /> Số báo danh</th>
-                    <th scope="col"><UserIcon /> Họ và tên</th>
-                    <th scope="col"><ScoreIcon /> Điểm</th>
-                    <th scope="col">
-                      <BirthdayIcon />
-                      Ngày sinh
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {resultList.map((c, idx) => (
-                    <tr 
-                      key={`${c.soBaoDanh}-${idx}`} 
-                      className={isPassingScore(c.diem, PASS_SCORE) ? 'passed-row' : 'failed-row'}
-                    >
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem) }}>
-                        {c.soBaoDanh}
-                      </td>
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem) }}>
-                        {c.hoVaTen}
-                      </td>
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>
-                        {c.diem}
-                      </td>
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem) }}>
-                        {c.ngaySinh}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-
-          {notFound && (
-            <div 
-              className="result-card" 
-              style={{textAlign: 'center'}}
-              role="alert"
-              aria-live="polite"
-            >
-              <span className="result-icon">
-                <QuestionIcon />
-              </span>
-              <div className="result-status">Không tìm thấy thí sinh phù hợp.</div>
-            </div>
-          )}
-
-          {!result && !resultList && !notFound && filteredData.length > 0 && (
-            <div className="results-section" role="region" aria-labelledby="candidates-list-heading">
-              <h3 id="candidates-list-heading" className="search-title">
-                <ListIcon />
-                Danh sách thí sinh
-              </h3>
-              <table className="candidates-table">
-                <thead>
-                  <tr>
-                    <th scope="col"><IdCardIcon /> Số báo danh</th>
-                    <th scope="col"><UserIcon /> Họ và tên</th>
-                    <th scope="col"><ScoreIcon /> Điểm</th>
-                    <th scope="col">
-                      <BirthdayIcon />
-                      Ngày sinh
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredData.slice((page-1)*pageSize, page*pageSize).map((c, idx) => (
-                    <tr 
-                      key={`${c.soBaoDanh}-${idx}`} 
-                      className={isPassingScore(c.diem, PASS_SCORE) ? 'passed-row' : 'failed-row'}
-                    >
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem) }}>
-                        {c.soBaoDanh}
-                      </td>
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem) }}>
-                        {c.hoVaTen}
-                      </td>
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>
-                        {c.diem}
-                      </td>
-                      <td className={isPassingScore(c.diem, PASS_SCORE) ? 'passed' : 'failed'} style={{ color: getScoreColor(c.diem) }}>
-                        {c.ngaySinh}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              
-              {/* Pagination between candidate list and score distribution chart */}
-              <div className="pagination" role="navigation" aria-label="Pagination Navigation">
-                <button 
-                  className="pagination-button"
-                  onClick={() => setPage(p => Math.max(1, p-1))}
-                  disabled={page === 1}
-                  aria-disabled={page === 1}
-                >
-                  <ArrowLeftIcon />
-                  Trước
-                </button>
-                <span>Trang {page} / {totalPages}</span>
-                <button 
-                  className="pagination-button"
-                  onClick={() => setPage(p => Math.min(totalPages, p+1))}
-                  disabled={page === totalPages}
-                  aria-disabled={page === totalPages}
-                >
-                  Sau
-                  <ArrowRightIcon />
-                </button>
-              </div>
-              
-              {/* Score distribution chart below the candidate list */}
-              <div className="candidate-list-chart-section">
-                <h3 className="chart-title">Phổ điểm thí sinh trong danh sách hiện tại</h3>
-                <div className="chart-container">
+              <div className="chart-container">
+                {chartType === 'bar' ? (
                   <BarChart bins={chartData.bins} binLabels={chartData.binLabels} />
-                </div>
+                ) : (
+                  <PieChart bins={chartData.bins} binLabels={chartData.binLabels} />
+                )}
               </div>
-            </div>
-          )}
-        </section>
+            </section>
+
+            <section className="search-section" aria-labelledby="search-heading">
+              <div className="search-main-container">
+                <div className="search-header-text">
+                  <h2 id="search-heading" className="search-title">Tra cứu điểm thi</h2>
+                  <p className="search-subtitle">Nhập số báo danh hoặc họ và tên thí sinh để xem kết quả chi tiết</p>
+                </div>
+
+                <form className="search-form-modern" onSubmit={(e) => e.preventDefault()} autoComplete="off">
+                  <div className="search-input-wrapper">
+                    <div className="search-prefix-icon">
+                      <SearchIcon />
+                    </div>
+                    <input
+                      id="sbd"
+                      type="text"
+                      className="search-field"
+                      placeholder="Tìm kiếm số báo danh hoặc họ tên..."
+                      value={input}
+                      onChange={e => setInput(e.target.value)}
+                      autoFocus
+                    />
+                    {input && (
+                      <button 
+                        type="button" 
+                        className="search-clear-action"
+                        onClick={() => {
+                          setInput('');
+                          setResult(null);
+                          setResultList(null);
+                          setNotFound(false);
+                        }}
+                        title="Xóa tìm kiếm"
+                      >
+                        <ResetIcon />
+                        <span>Xóa</span>
+                      </button>
+                    )}
+                  </div>
+                  <div className="search-hint">
+                    <kbd>Enter</kbd> để tra cứu sau khi nhập
+                  </div>
+                </form>
+              </div>
+
+              {/* Advanced Filters */}
+              <div className="filters-section">
+                <button 
+                  className="filter-toggle-btn"
+                  onClick={() => setShowFilters(!showFilters)}
+                  aria-expanded={showFilters}
+                  aria-controls="filters-content"
+                >
+                  {showFilters ? <ChevronUpIcon /> : <ChevronDownIcon />}
+                  {showFilters ? 'Ẩn bộ lọc' : 'Hiển thị bộ lọc nâng cao'}
+                </button>
+                
+                {showFilters && (
+                  <div id="filters-content" className="filters-content">
+                    <div className="filter-row">
+                      <div className="filter-group">
+                        <label htmlFor="min-score">Điểm tối thiểu:</label>
+                        <input
+                          id="min-score"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.25"
+                          value={filters.minScore || ''}
+                          onChange={(e) => handleFilterChange('minScore', e.target.value ? parseFloat(e.target.value) : null)}
+                          className="filter-input"
+                        />
+                      </div>
+                      
+                      <div className="filter-group">
+                        <label htmlFor="max-score">Điểm tối đa:</label>
+                        <input
+                          id="max-score"
+                          type="number"
+                          min="0"
+                          max="100"
+                          step="0.25"
+                          value={filters.maxScore || ''}
+                          onChange={(e) => handleFilterChange('maxScore', e.target.value ? parseFloat(e.target.value) : null)}
+                          className="filter-input"
+                        />
+                      </div>
+                    </div>
+                    
+                    <div className="filter-row">
+                      <div className="filter-group">
+                        <label htmlFor="sort-by">Sắp xếp theo:</label>
+                        <select
+                          id="sort-by"
+                          value={filters.sortBy}
+                          onChange={(e) => handleFilterChange('sortBy', e.target.value as 'soBaoDanh' | 'hoVaTen' | 'diem' | 'ngaySinh')}
+                          className="filter-select"
+                        >
+                          <option value="diem">Điểm</option>
+                          <option value="soBaoDanh">Số báo danh</option>
+                          <option value="hoVaTen">Họ và tên</option>
+                          <option value="ngaySinh">Ngày sinh</option>
+                        </select>
+                      </div>
+                      
+                      <div className="filter-group">
+                        <label htmlFor="sort-order">Thứ tự:</label>
+                        <select
+                          id="sort-order"
+                          value={filters.sortOrder}
+                          onChange={(e) => handleFilterChange('sortOrder', e.target.value as 'asc' | 'desc')}
+                          className="filter-select"
+                        >
+                          <option value="desc">Giảm dần</option>
+                          <option value="asc">Tăng dần</option>
+                        </select>
+                      </div>
+                    </div>
+                    
+                    <div className="filter-actions">
+                      <button className="reset-filters-btn" onClick={resetFilters}>
+                        <ResetIcon />
+                        Đặt lại bộ lọc
+                      </button>
+                      <span className="filter-results-count">
+                        Hiển thị {filteredData.length} / {data.length} thí sinh
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {result && (
+                <div className={`result-card-premium ${result.diem >= PASS_SCORE ? 'passed' : 'failed'}`}>
+                  <div className="result-card-inner">
+                    <div className="result-status-section">
+                      <div className="result-badge-icon">
+                        {result.diem >= PASS_SCORE ? <SuccessIcon /> : <InfoIcon />}
+                      </div>
+                      <div className="result-status-text">
+                        <h3 className="result-headline">
+                          {result.diem >= PASS_SCORE ? 'Chúc mừng, bạn đã ĐẬU!' : 'Rất tiếc, bạn chưa ĐẬU!'}
+                        </h3>
+                        <p className="result-subline">
+                          {result.diem >= PASS_SCORE ? getRandomPassedMessage() : getRandomFailedMessage()}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="result-details-grid">
+                      <div className="detail-item">
+                        <span className="detail-label">Số báo danh</span>
+                        <span className="detail-value highlight">{result.soBaoDanh}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Họ và tên</span>
+                        <span className="detail-value name">{result.hoVaTen}</span>
+                      </div>
+                      <div className="detail-item">
+                        <span className="detail-label">Ngày sinh</span>
+                        <span className="detail-value">{result.ngaySinh}</span>
+                      </div>
+                      <div className="detail-item score-focus">
+                        <span className="detail-label">Điểm khảo sát</span>
+                        <div className="score-display">
+                          <span className="score-number" style={{ color: getScoreColor(result.diem) }}>{result.diem}</span>
+                          <span className="score-total">/ 100</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="result-card-footer">
+                      <div className="exam-info-tag">
+                        <SchoolIcon />
+                        <span>Kỳ thi khảo sát lớp 6 - Năm học {YEAR_CONFIG[selectedYear].label}</span>
+                      </div>
+                      <div className="pass-score-tag">
+                        <span>Điểm chuẩn: <b>{PASS_SCORE}</b></span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="related-materials-premium">
+                    <h4 className="related-title">Tài liệu ôn luyện gợi ý cho năm {selectedYear}:</h4>
+                    <div className="materials-chips">
+                      {EXAM_MATERIALS.filter(m => m.year === selectedYear).map(m => (
+                        <button key={m.id} className="material-chip-btn" onClick={() => setCurrentView('materials')}>
+                          <BookIcon />
+                          {m.title}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {resultList && (
+                <div className="results-section">
+                  <h3 className="search-title">Có {resultList.length} thí sinh trùng tên:</h3>
+                  <div className="table-responsive">
+                    <table className="candidates-table">
+                      <thead>
+                        <tr>
+                          <th>Số báo danh</th>
+                          <th>Họ và tên</th>
+                          <th>Điểm</th>
+                          <th>Ngày sinh</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {resultList.map((c, idx) => (
+                          <tr key={`${c.soBaoDanh}-${idx}`} className={c.diem >= PASS_SCORE ? 'passed-row' : 'failed-row'}>
+                            <td style={{ color: getScoreColor(c.diem) }}>{c.soBaoDanh}</td>
+                            <td style={{ color: getScoreColor(c.diem) }}>{c.hoVaTen}</td>
+                            <td style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>{c.diem}</td>
+                            <td style={{ color: getScoreColor(c.diem) }}>{c.ngaySinh}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {notFound && (
+                <div className="result-card" style={{textAlign: 'center'}}>
+                  <span className="result-icon"><QuestionIcon /></span>
+                  <div className="result-status">Không tìm thấy thí sinh phù hợp.</div>
+                </div>
+              )}
+
+              {!result && !resultList && !notFound && filteredData.length > 0 && (
+                <div className="results-section">
+                  <h3 className="search-title"><ListIcon /> Danh sách thí sinh ({selectedYear})</h3>
+                  <div className="table-responsive">
+                    <table className="candidates-table">
+                      <thead>
+                        <tr>
+                          <th>Số báo danh</th>
+                          <th>Họ và tên</th>
+                          <th>Điểm</th>
+                          <th>Ngày sinh</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredData.slice((page-1)*pageSize, page*pageSize).map((c, idx) => (
+                          <tr key={`${c.soBaoDanh}-${idx}`} className={c.diem >= PASS_SCORE ? 'passed-row' : 'failed-row'}>
+                            <td style={{ color: getScoreColor(c.diem) }}>{c.soBaoDanh}</td>
+                            <td style={{ color: getScoreColor(c.diem) }}>{c.hoVaTen}</td>
+                            <td style={{ color: getScoreColor(c.diem), fontWeight: 'bold' }}>{c.diem}</td>
+                            <td style={{ color: getScoreColor(c.diem) }}>{c.ngaySinh}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  
+                  <div className="pagination">
+                    <button 
+                      className="pagination-button"
+                      onClick={() => setPage(p => Math.max(1, p-1))} 
+                      disabled={page === 1}
+                      title="Trang trước"
+                    >
+                      <ArrowLeftIcon /> Trước
+                    </button>
+                    <div className="pagination-info">
+                      <span className="current-page">{page}</span>
+                      <span className="page-separator">/</span>
+                      <span className="total-pages">{totalPages}</span>
+                    </div>
+                    <button 
+                      className="pagination-button"
+                      onClick={() => setPage(p => Math.min(totalPages, p+1))} 
+                      disabled={page === totalPages}
+                      title="Trang sau"
+                    >
+                      Sau <ArrowRightIcon />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </section>
+          </>
+        ) : (
+          <ExamLibrary />
+        )}
       </main>
 
       <footer className="footer">
-        <div>© {new Date().getFullYear()} Tra cứu điểm thi lớp 6 Trường Trần Đại Nghĩa</div>
-        <div className="footer-links">
-          <a href="https://cungnhauhoc.net" target="_blank" rel="noopener noreferrer" className="footer-link">
-            Nguồn: cungnhauhoc.net
-          </a>
-          <a 
-            href="#" 
-            onClick={(e) => { e.preventDefault(); toggleTheme(); }} 
-            className="footer-link"
-            aria-label={theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
-          >
-            {theme === 'light' ? 'Chế độ tối' : 'Chế độ sáng'}
-          </a>
+        <div className="footer-content">
+          <div className="footer-brand-info">
+            <BrandIcon />
+            <div className="footer-brand-text">
+              <span className="footer-name">diemthi.cungnhauhoc.net</span>
+              <span className="footer-desc">Nền tảng tra cứu và phân tích dữ liệu tuyển sinh lớp 6</span>
+            </div>
+          </div>
+          <div className="footer-bottom">
+            <div className="footer-copyright">
+              © {new Date().getFullYear()} Cùng Nhau Học. Tất cả quyền được bảo lưu.
+            </div>
+            <div className="footer-nav">
+              <a href="https://cungnhauhoc.net" target="_blank" rel="noopener noreferrer" className="footer-link">Trang chủ</a>
+              <a href="#" className="footer-link">Liên hệ</a>
+              <a href="#" className="footer-link">Chính sách</a>
+            </div>
+          </div>
         </div>
       </footer>
       
-      {/* Scroll to top button */}
       {showScrollTop && (
-        <button 
-          className="scroll-to-top"
-          onClick={scrollToTop}
-          aria-label="Lên đầu trang"
-        >
+        <button className="scroll-to-top" onClick={scrollToTop} aria-label="Lên đầu trang">
           <UpArrowIcon />
         </button>
       )}
     </div>
+  );
+}
+
+// Simple Exam Library Component
+function ExamLibrary() {
+  const [selectedMaterial, setSelectedMaterial] = useState<string | null>(null);
+  const [content, setContent] = useState<string>('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [previewPdf, setPreviewPdf] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const handleSelect = async (m: any) => {
+    setSelectedMaterial(m.id);
+    setIsLoading(true);
+    
+    try {
+      const modulePath = `./exam-content/${m.path}`;
+      const loadFile = mdxModules[modulePath];
+      
+      if (loadFile) {
+        const rawContent = await loadFile() as string;
+        // Strip frontmatter
+        let cleanContent = rawContent.replace(/^---[\s\S]*?---/, '').trim();
+        
+        // Transform React-style style={{...}} to standard HTML style="..."
+        cleanContent = cleanContent.replace(/style=\{\{\s*([\s\S]*?)\s*\}\}/g, (match, p1) => {
+          const styleEntries = p1.match(/([a-zA-Z]+)\s*:\s*("[^"]*"|'[^']*'|[^,}]+)/g);
+          if (!styleEntries) return '';
+
+          let boxType = 'default';
+          const htmlStyles = styleEntries.map(entry => {
+            const [prop, val] = entry.split(':').map(s => s.trim());
+            const cleanVal = val.replace(/^["']|["']$/g, '');
+            
+            if (prop === 'background' || prop === 'backgroundColor') {
+              if (cleanVal.includes('blue') || cleanVal.includes('#2196f3')) boxType = 'info';
+              if (cleanVal.includes('green') || cleanVal.includes('#4caf50')) boxType = 'success';
+              if (cleanVal.includes('orange') || cleanVal.includes('#ff9800')) boxType = 'warning';
+              if (cleanVal.includes('purple') || cleanVal.includes('#9c27b0')) boxType = 'accent';
+              return '';
+            }
+            
+            if (prop === 'color' && (cleanVal === 'white' || cleanVal === '#fff' || cleanVal === '#ffffff')) {
+              return '';
+            }
+
+            const cssProp = prop.replace(/([A-Z])/g, "-$1").toLowerCase();
+            return `${cssProp}: ${cleanVal}`;
+          }).filter(Boolean);
+
+          return `class="content-box box-${boxType}" style="${htmlStyles.join('; ')}"`;
+        });
+
+        const dirPath = m.path.substring(0, m.path.lastIndexOf('/'));
+        const assetBase = dirPath ? `/exam-content/${dirPath}/` : '/exam-content/';
+        
+        cleanContent = cleanContent.replace(/(src|href)="((?!http|https|\/)[^"]+)"/g, (match, attr, path) => {
+          return `${attr}="${assetBase}${path}"`;
+        });
+
+        cleanContent = cleanContent.replace(/(!?\[.*?\])\((?!http|https|\/)(.*?)\)/g, (match, text, path) => {
+          return `${text}(${assetBase}${path})`;
+        });
+
+        setContent(cleanContent);
+      } else {
+        setContent('### Lỗi: Không tìm thấy file tài liệu.');
+      }
+    } catch (error) {
+      console.error('Error loading MDX:', error);
+      setContent('### Lỗi: Không thể tải nội dung tài liệu.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLinkClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    const anchor = target.closest('a');
+    if (anchor && anchor.getAttribute('href')?.endsWith('.pdf')) {
+      e.preventDefault();
+      const pdfUrl = anchor.getAttribute('href')!;
+      setPreviewPdf(pdfUrl);
+    }
+  };
+
+  const filteredMaterials = useMemo(() => {
+    if (!searchTerm.trim()) return EXAM_MATERIALS;
+    const term = searchTerm.toLowerCase();
+    return EXAM_MATERIALS.filter(m => 
+      m.title.toLowerCase().includes(term) || 
+      m.category.toLowerCase().includes(term) ||
+      (m.year && m.year.includes(term))
+    );
+  }, [searchTerm]);
+
+  const categories = Array.from(new Set(filteredMaterials.map(m => m.category)));
+
+  return (
+    <section className="materials-section">
+      <div className="materials-container">
+        <aside className="materials-sidebar">
+          <div className="sidebar-header">
+            <h3 className="sidebar-title">
+              <BookIcon />
+              Thư viện tài liệu
+            </h3>
+            <div className="sidebar-search">
+              <SearchIcon />
+              <input 
+                type="text" 
+                placeholder="Tìm kiếm tài liệu..." 
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <nav className="sidebar-nav">
+            {categories.length > 0 ? categories.map(cat => (
+              <div key={cat} className="category-group">
+                <h4 className="category-title">{cat}</h4>
+                <div className="category-list">
+                  {filteredMaterials.filter(m => m.category === cat).map(m => (
+                    <button 
+                      key={m.id} 
+                      className={`material-item ${selectedMaterial === m.id ? 'active' : ''}`}
+                      onClick={() => handleSelect(m)}
+                    >
+                      <span className="material-icon">{m.path.endsWith('.mdx') ? '📄' : '📁'}</span>
+                      <div className="material-info">
+                        <span className="material-title">{m.title}</span>
+                        {m.year && <span className="material-badge">{m.year}</span>}
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )) : (
+              <div className="no-results">Không tìm thấy tài liệu phù hợp</div>
+            )}
+          </nav>
+        </aside>
+        
+        <main className="materials-content" onClick={handleLinkClick}>
+          {isLoading ? (
+            <div className="materials-placeholder">
+              <div className="loading-spinner"></div>
+              <p>Đang tải tài liệu...</p>
+            </div>
+          ) : selectedMaterial ? (
+            <div className="material-detail">
+              <div className="markdown-body">
+                <ReactMarkdown 
+                  remarkPlugins={[remarkGfm]} 
+                  rehypePlugins={[rehypeRaw]}
+                >
+                  {content}
+                </ReactMarkdown>
+              </div>
+            </div>
+          ) : (
+            <div className="materials-placeholder">
+              <div className="welcome-content">
+                <BookIcon />
+                <h2>Chào mừng bạn đến với Thư viện tài liệu</h2>
+                <p>Hãy chọn một danh mục bên trái để bắt đầu ôn luyện và tham khảo đề thi các năm.</p>
+                <div className="welcome-stats">
+                  <div className="w-stat"><b>{EXAM_MATERIALS.length}</b> Tài liệu</div>
+                  <div className="w-stat"><b>{categories.length}</b> Danh mục</div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      </div>
+
+      {previewPdf && (
+        <div className="pdf-modal-overlay" onClick={() => setPreviewPdf(null)}>
+          <div className="pdf-modal-container" onClick={e => e.stopPropagation()}>
+            <div className="pdf-modal-header">
+              <h3>Xem tài liệu PDF</h3>
+              <button className="close-modal-btn" onClick={() => setPreviewPdf(null)}>×</button>
+            </div>
+            <div className="pdf-modal-body">
+              <iframe src={previewPdf} width="100%" height="100%" title="PDF Preview"></iframe>
+            </div>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }
 

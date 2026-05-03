@@ -1,0 +1,14 @@
+{
+  "label": "Tuyển Sinh Các Cấp",
+  "position": 12,
+  "collapsed": true,
+  "collapsible": true,
+  "className": "section-title publish-module",
+  "link": {
+    "type": "generated-index",
+    "title": "Tuyển Sinh Các Cấp - Hướng Dẫn, Kinh Nghiệm & Lộ Trình Thành Công"
+  },
+  "customProps": {
+    "description": "Tổng hợp thông tin tuyển sinh các cấp: lớp 1, lớp 6, lớp 10, lớp 12 và đại học. Cập nhật quy chế, lịch tuyển sinh, kinh nghiệm ôn luyện, bí quyết đạt điểm cao và các tài liệu tham khảo mới nhất giúp học sinh, phụ huynh chuẩn bị tốt cho các kỳ thi chuyển cấp quan trọng."
+  }
+}

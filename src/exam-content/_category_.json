@@ -1,0 +1,14 @@
+{
+  "label": "Kỳ Thi",
+  "position": 6,
+  "collapsed": true,
+  "collapsible": true,
+  "className": "section-title environment-variables",
+  "link": {
+    "type": "generated-index",
+    "title": "Kỳ Thi - Tổng Hợp Đề Thi, Đáp Án, Kinh Nghiệm Ôn Luyện & Tuyển Sinh"
+  },
+  "customProps": {
+    "description": "Tổng hợp đề thi, đáp án, kinh nghiệm ôn luyện và thông tin tuyển sinh các cấp: lớp 1, lớp 6, lớp 10, lớp 12 và đại học. Cập nhật mới nhất về lịch thi, điểm chuẩn, tỷ lệ chọi, bí quyết đạt điểm cao và hướng dẫn ôn luyện hiệu quả cho học sinh và phụ huynh."
+  }
+}

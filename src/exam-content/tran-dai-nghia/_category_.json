@@ -1,0 +1,14 @@
+{
+  "label": "Trần Đại Nghĩa",
+  "position": 11,
+  "collapsed": false,
+  "collapsible": true,
+  "className": "section-title publish-module",
+  "link": {
+    "type": "generated-index",
+    "title": "Kỳ Thi Trần Đại Nghĩa - Tài Liệu Ôn Tập & Đề Thi"
+  },
+  "customProps": {
+    "description": "Tổng hợp tài liệu ôn tập, đề thi và đáp án kỳ thi Trần Đại Nghĩa các năm. Chuẩn bị kiến thức toàn diện cho kỳ thi tuyển sinh vào lớp 6."
+  }
+}
