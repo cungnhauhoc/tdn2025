@@ -59,6 +59,19 @@ const BarChartIcon = () => (
   </svg>
 );
 
+const SunIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="4"/>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/>
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>
+  </svg>
+);
+
 const AwardIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <circle cx="12" cy="8" r="7"/>
@@ -571,7 +584,7 @@ function App() {
                 onClick={toggleTheme}
                 aria-label={theme === 'light' ? 'Chuyển sang chế độ tối' : 'Chuyển sang chế độ sáng'}
               >
-                {theme === 'light' ? '🌙' : '☀️'}
+                {theme === 'light' ? <MoonIcon /> : <SunIcon />}
               </button>
             </div>
           </div>
@@ -1044,12 +1057,21 @@ function ExamLibrary() {
   const [isLoading, setIsLoading] = useState(false);
   const [previewPdf, setPreviewPdf] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<string>('Tất cả');
 
   const handleSelect = async (m: ExamMaterial) => {
     setSelectedMaterial(m.id);
     setIsLoading(true);
     // Update URL hash for SEO and deep-linking
     window.history.pushState(null, '', `#/tai-lieu/${m.id}`);
+    
+    // Auto-scroll to content on mobile
+    if (window.innerWidth < 992) {
+      setTimeout(() => {
+        const contentArea = document.querySelector('.materials-content');
+        contentArea?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
     
     try {
       const modulePath = `./exam-content/${m.path}`;
@@ -1135,23 +1157,34 @@ function ExamLibrary() {
     const target = e.target as HTMLElement;
     const anchor = target.closest('a');
     if (anchor && anchor.getAttribute('href')?.endsWith('.pdf')) {
-      e.preventDefault();
       const pdfUrl = anchor.getAttribute('href')!;
+      const isMobile = window.innerWidth < 768;
+      
+      if (isMobile) {
+        // On mobile, let it open in new tab (default behavior or forced)
+        anchor.setAttribute('target', '_blank');
+        return;
+      }
+
+      e.preventDefault();
       setPreviewPdf(pdfUrl);
     }
   };
 
-  const filteredMaterials = useMemo(() => {
-    if (!searchTerm.trim()) return EXAM_MATERIALS;
+    let filtered = EXAM_MATERIALS;
+    if (selectedCategory !== 'Tất cả') {
+      filtered = filtered.filter(m => m.category === selectedCategory);
+    }
+    if (!searchTerm.trim()) return filtered;
     const term = searchTerm.toLowerCase();
-    return EXAM_MATERIALS.filter(m => 
+    return filtered.filter(m => 
       m.title.toLowerCase().includes(term) || 
       m.category.toLowerCase().includes(term) ||
       (m.year && m.year.includes(term))
     );
-  }, [searchTerm]);
+  }, [searchTerm, selectedCategory]);
 
-  const categories = Array.from(new Set(filteredMaterials.map(m => m.category)));
+  const categories = ['Tất cả', ...Array.from(new Set(EXAM_MATERIALS.map(m => m.category)))];
 
   return (
     <section className="materials-section">
@@ -1169,6 +1202,19 @@ function ExamLibrary() {
               <BookIcon />
               Thư viện tài liệu
             </h3>
+            
+            <div className="category-tabs-mobile">
+              {categories.map(cat => (
+                <button 
+                  key={cat} 
+                  className={`cat-tab ${selectedCategory === cat ? 'active' : ''}`}
+                  onClick={() => setSelectedCategory(cat)}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+
             <div className="sidebar-search">
               <SearchIcon />
               <input 
@@ -1181,32 +1227,61 @@ function ExamLibrary() {
           </div>
 
           <nav className="sidebar-nav">
-            {categories.length > 0 ? categories.map(cat => (
-              <div key={cat} className="category-group">
-                <h4 className="category-title">{cat}</h4>
-                <div className="category-list">
-                  {filteredMaterials.filter(m => m.category === cat).map(m => (
-                    <button 
-                      key={m.id} 
-                      className={`material-item ${selectedMaterial === m.id ? 'active' : ''}`}
-                      onClick={() => handleSelect(m)}
-                    >
-                      <span className="material-icon">{m.path.endsWith('.mdx') ? '📄' : '📁'}</span>
-                      <div className="material-info">
-                        <span className="material-title">{m.title}</span>
+            {selectedCategory === 'Tất cả' && !searchTerm ? (
+              // Desktop-like grouped view for 'All'
+              categories.filter(c => c !== 'Tất cả').map(cat => (
+                <div key={cat} className="category-group">
+                  <h4 className="category-title">{cat}</h4>
+                  <div className="category-list">
+                    {filteredMaterials.filter(m => m.category === cat).map(m => (
+                      <button 
+                        key={m.id} 
+                        className={`material-item ${selectedMaterial === m.id ? 'active' : ''}`}
+                        onClick={() => handleSelect(m)}
+                      >
+                        <span className="material-icon">{m.path.endsWith('.mdx') ? '📄' : '📁'}</span>
+                        <div className="material-info">
+                          <span className="material-title">{m.title}</span>
+                          {m.year && <span className="material-badge">{m.year}</span>}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))
+            ) : (
+              // Flat list for specific category or search
+              <div className="category-list flat">
+                {filteredMaterials.map(m => (
+                  <button 
+                    key={m.id} 
+                    className={`material-item ${selectedMaterial === m.id ? 'active' : ''}`}
+                    onClick={() => handleSelect(m)}
+                  >
+                    <span className="material-icon">{m.path.endsWith('.mdx') ? '📄' : '📁'}</span>
+                    <div className="material-info">
+                      <span className="material-title">{m.title}</span>
+                      <div className="material-meta">
+                        <span className="material-badge cat">{m.category}</span>
                         {m.year && <span className="material-badge">{m.year}</span>}
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    </div>
+                  </button>
+                ))}
               </div>
-            )) : (
+            )}
+            {filteredMaterials.length === 0 && (
               <div className="no-results">Không tìm thấy tài liệu phù hợp</div>
             )}
           </nav>
         </aside>
         
         <main className="materials-content" onClick={handleLinkClick}>
+          {selectedMaterial && (
+            <div className="content-header-mobile">
+              <h3>Đang xem: {EXAM_MATERIALS.find(m => m.id === selectedMaterial)?.title}</h3>
+            </div>
+          )}
           {isLoading ? (
             <div className="materials-placeholder">
               <div className="loading-spinner"></div>
