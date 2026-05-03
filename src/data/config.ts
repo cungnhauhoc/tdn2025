@@ -3,7 +3,7 @@ export type Year = '2024' | '2025' | '2026';
 
 export const EXAM_YEARS: Year[] = ['2024', '2025'];
 
-export const YEAR_CONFIG = {
+export const YEAR_CONFIG: Record<Year, { label: string; dataFile: string; passScore: number }> = {
   '2024': {
     label: '2024-2025',
     dataFile: '/data2024.json',
@@ -13,6 +13,11 @@ export const YEAR_CONFIG = {
     label: '2025-2026',
     dataFile: '/data.json',
     passScore: 73.25,
+  },
+  '2026': {
+    label: '2026-2027',
+    dataFile: '/data.json', // Placeholder
+    passScore: 75, // Placeholder
   },
 };
 

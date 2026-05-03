@@ -3,10 +3,11 @@ import './styles.css';
 import { BarChart } from './BarChart';
 import { PieChart } from './PieChart';
 import { EXAM_YEARS, YEAR_CONFIG, parse2024Data, type Year } from './data/config';
-import { EXAM_MATERIALS } from './data/materials';
+import { EXAM_MATERIALS, type ExamMaterial } from './data/materials';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeRaw from 'rehype-raw';
+import { Helmet } from 'react-helmet-async';
 
 // Vite glob import for MDX files
 const mdxModules = import.meta.glob('./exam-content/**/*.mdx', { query: '?raw', import: 'default' });
@@ -16,29 +17,6 @@ const BrandIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
     <path d="M6 12v5c3 3 9 3 12 0v-5"/>
-  </svg>
-);
-
-const HomeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-    <polyline points="9 22 9 12 15 12 15 22"/>
-  </svg>
-);
-
-const CalendarIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-    <line x1="16" y1="2" x2="16" y2="6"/>
-    <line x1="8" y1="2" x2="8" y2="6"/>
-    <line x1="3" y1="10" x2="21" y2="10"/>
-  </svg>
-);
-
-const NewIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="5" x2="12" y2="19"/>
-    <line x1="5" y1="12" x2="19" y2="12"/>
   </svg>
 );
 
@@ -130,18 +108,6 @@ const QuestionIcon = () => (
   </svg>
 );
 
-const BirthdayIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-    <line x1="16" y1="2" x2="16" y2="6"/>
-    <line x1="8" y1="2" x2="8" y2="6"/>
-    <line x1="3" y1="10" x2="21" y2="10"/>
-    <circle cx="12" cy="16" r="1"/>
-    <circle cx="16" cy="16" r="1"/>
-    <circle cx="8" cy="16" r="1"/>
-  </svg>
-);
-
 const ListIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="8" y1="6" x2="21" y2="6"/>
@@ -179,30 +145,6 @@ const InfoIcon = () => (
     <circle cx="12" cy="12" r="10"/>
     <path d="M12 16v-4"/>
     <path d="M12 8h.01"/>
-  </svg>
-);
-
-// New icons for candidate list
-const IdCardIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-    <circle cx="9" cy="7" r="4"/>
-    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-  </svg>
-);
-
-const UserIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-    <circle cx="12" cy="7" r="4"/>
-  </svg>
-);
-
-const ScoreIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="10"/>
-    <path d="M12 6v6l4 2"/>
   </svg>
 );
 
@@ -276,8 +218,6 @@ const getScoreColor = (score: number) => {
 };
 
 // Function to determine if a candidate passed or failed
-const isPassingScore = (score: number, passScore: number) => score >= passScore;
-
 function App() {
   const [data, setData] = useState<Candidate[]>([]);
   const [selectedYear, setSelectedYear] = useState<Year>('2025');
@@ -563,6 +503,18 @@ function App() {
 
   return (
     <div className="container">
+      <Helmet>
+        <title>
+          {currentView === 'search' 
+            ? `Tra Cứu Điểm Thi Lớp 6 Trần Đại Nghĩa - Năm học ${YEAR_CONFIG[selectedYear].label}` 
+            : 'Đề Thi & Tài liệu Tham Khảo Lớp 6 Trần Đại Nghĩa'}
+        </title>
+        <meta name="description" content={
+          currentView === 'search'
+            ? `Hệ thống tra cứu điểm thi khảo sát lớp 6 trường Trần Đại Nghĩa năm học ${YEAR_CONFIG[selectedYear].label}. Phân tích phổ điểm và thống kê chi tiết.`
+            : 'Tổng hợp đề thi chính thức, đề thi thử và tài liệu ôn luyện hữu ích dành cho học sinh chuẩn bị kỳ thi khảo sát vào lớp 6 Trần Đại Nghĩa.'
+        } />
+      </Helmet>
       <a href="#main-content" className="skip-link">Bỏ qua tới nội dung chính</a>
       
       <header className="modern-header">
@@ -571,7 +523,7 @@ function App() {
             <div className="brand-logo">
               <BrandIcon />
               <div className="brand-text">
-                <span className="brand-name">diemthi.cungnhauhoc.net</span>
+                <span className="brand-name">Tra Cứu Điểm Thi</span>
                 <span className="brand-tagline">Hệ thống phân tích điểm thi Trần Đại Nghĩa</span>
               </div>
             </div>
@@ -989,7 +941,7 @@ function App() {
           <div className="footer-brand-info">
             <BrandIcon />
             <div className="footer-brand-text">
-              <span className="footer-name">diemthi.cungnhauhoc.net</span>
+              <span className="footer-name">Tra Cứu Điểm Thi</span>
               <span className="footer-desc">Nền tảng tra cứu và phân tích dữ liệu tuyển sinh lớp 6</span>
             </div>
           </div>
@@ -1023,7 +975,7 @@ function ExamLibrary() {
   const [previewPdf, setPreviewPdf] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  const handleSelect = async (m: any) => {
+  const handleSelect = async (m: ExamMaterial) => {
     setSelectedMaterial(m.id);
     setIsLoading(true);
     
@@ -1037,13 +989,13 @@ function ExamLibrary() {
         let cleanContent = rawContent.replace(/^---[\s\S]*?---/, '').trim();
         
         // Transform React-style style={{...}} to standard HTML style="..."
-        cleanContent = cleanContent.replace(/style=\{\{\s*([\s\S]*?)\s*\}\}/g, (match, p1) => {
+        cleanContent = cleanContent.replace(/style=\{\{\s*([\s\S]*?)\s*\}\}/g, (_match, p1) => {
           const styleEntries = p1.match(/([a-zA-Z]+)\s*:\s*("[^"]*"|'[^']*'|[^,}]+)/g);
           if (!styleEntries) return '';
 
           let boxType = 'default';
-          const htmlStyles = styleEntries.map(entry => {
-            const [prop, val] = entry.split(':').map(s => s.trim());
+          const htmlStyles = styleEntries.map((entry: string) => {
+            const [prop, val] = entry.split(':').map((s: string) => s.trim());
             const cleanVal = val.replace(/^["']|["']$/g, '');
             
             if (prop === 'background' || prop === 'backgroundColor') {
@@ -1068,11 +1020,11 @@ function ExamLibrary() {
         const dirPath = m.path.substring(0, m.path.lastIndexOf('/'));
         const assetBase = dirPath ? `/exam-content/${dirPath}/` : '/exam-content/';
         
-        cleanContent = cleanContent.replace(/(src|href)="((?!http|https|\/)[^"]+)"/g, (match, attr, path) => {
+        cleanContent = cleanContent.replace(/(src|href)="((?!http|https|\/)[^"]+)"/g, (_match, attr, path) => {
           return `${attr}="${assetBase}${path}"`;
         });
 
-        cleanContent = cleanContent.replace(/(!?\[.*?\])\((?!http|https|\/)(.*?)\)/g, (match, text, path) => {
+        cleanContent = cleanContent.replace(/(!?\[.*?\])\((?!http|https|\/)(.*?)\)/g, (_match, text, path) => {
           return `${text}(${assetBase}${path})`;
         });
 
@@ -1112,6 +1064,13 @@ function ExamLibrary() {
 
   return (
     <section className="materials-section">
+      <Helmet>
+        <title>
+          {selectedMaterial 
+            ? `${EXAM_MATERIALS.find(m => m.id === selectedMaterial)?.title} - Tra Cứu Điểm Thi`
+            : 'Đề Thi & Tài liệu Tham Khảo Lớp 6 Trần Đại Nghĩa'}
+        </title>
+      </Helmet>
       <div className="materials-container">
         <aside className="materials-sidebar">
           <div className="sidebar-header">
